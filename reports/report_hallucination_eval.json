@@ -1,0 +1,44 @@
+{
+  "file": "report_hallucination.txt",
+  "citation_accuracy": {
+    "total_citations": 0,
+    "verified_by_paper_id": 0,
+    "verified_by_title_match": 0,
+    "not_found": 0,
+    "citation_accuracy_pct": 0.0,
+    "hallucinated_citations": []
+  },
+  "claim_grounding": {
+    "total_quantitative_claims": 18,
+    "verified_in_corpus": 18,
+    "unverified": 0,
+    "grounding_rate_pct": 100.0,
+    "unverified_claims": []
+  },
+  "corpus_coverage": {
+    "unique_papers_cited": 0,
+    "total_papers_in_corpus": 122,
+    "coverage_pct": 0.0
+  },
+  "confidence_distribution": {
+    "[SUPPORTED]": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "[CONTESTED]": {
+      "count": 3,
+      "pct": 37.5
+    },
+    "[INSUFFICIENT]": {
+      "count": 5,
+      "pct": 62.5
+    }
+  },
+  "report_statistics": {
+    "word_count": 1692,
+    "sections": 6,
+    "references": 0,
+    "research_gaps": 5,
+    "contradictions": 3
+  }
+}

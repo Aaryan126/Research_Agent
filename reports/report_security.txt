@@ -1,0 +1,428 @@
+# Literature Review: Security Vulnerabilities and Trust Frameworks in Agentic AI Systems
+
+## 1. Introduction
+
+Agentic AI systems—autonomous agents built on large language models (LLMs) that can reason, plan, use tools, and collaborate in multi-agent configurations—represent a transformative shift in artificial intelligence. These systems are being deployed across enterprise and societal domains, from healthcare and finance to scientific discovery and customer service. However, their autonomy, persistent memory access, complex reasoning capabilities, and tool integration create novel security vulnerabilities that differ fundamentally from traditional AI systems. This literature review synthesizes findings from approximately 122 papers published primarily between 2023-2026, examining the security threat landscape and emerging trust frameworks designed to address these challenges.
+
+---
+
+## 2. Research Landscape
+
+### Corpus Overview
+The research corpus comprises 122 papers spanning 2020-2026, with explosive growth in recent years:
+- **2020**: 1 paper (24 citations)
+- **2023**: 2 papers (average 179 citations)
+- **2024**: 11 papers (average 32 citations)
+- **2025**: 101 papers (average 10 citations)
+- **2026**: 7 papers (average 1 citation)
+
+This publication trend reveals that agentic AI security is an emerging field with 118 papers (97%) published in 2024-2026, indicating urgent research attention to security concerns as these systems move toward production deployment.
+
+### Research Focus
+Papers addressing "security vulnerabilities agentic AI" and "trust frameworks agentic AI" show identical distribution patterns, suggesting that security and trust research are deeply intertwined in this domain. The most influential foundational works include *Cognitive Architectures for Language Agents* (Yao et al., 2023, 296 citations) and *The Landscape of Emerging AI Agent Architectures* (Masterman et al., 2024, 149 citations).
+
+---
+
+## 3. Key Findings
+
+### 3.1 Novel Vulnerability Classes in Agentic AI
+
+#### **Prompt Injection Attacks** [SUPPORTED]
+
+Prompt injection emerges as the most widely documented threat across the literature. Multiple papers confirm that agentic systems are vulnerable to adversarial inputs that manipulate agent behavior by embedding deceptive instructions.
+
+**Evidence:**
+- A large-scale empirical study analyzing 31,132 agent skills from two major marketplaces found that **26.1% contain at least one vulnerability**, with prompt injection representing one of four major vulnerability categories (Liu et al., 2026, *Agent Skills in the Wild*).
+- The study identified four distinct prompt injection patterns: instruction override, hidden instructions, exfiltration commands, and behavior manipulation.
+- Comparative testing across 3,250 attack scenarios on seven language models showed that **chained attacks achieved 91-96% success rates**, demonstrating that attack complexity dramatically amplifies effectiveness (Gasmi et al., 2025, *Bridging AI and Software Security*).
+- Multi-agent frameworks using agentic architectures achieved a **45.7% reduction** in prompt injection vulnerabilities through policy enforcement agents, though this still leaves substantial residual risk (Gosmar et al., 2025).
+
+**Unique Characteristics:**
+Unlike traditional software vulnerabilities, prompt injection in agentic systems can propagate across agent networks. In multi-agent systems (MAS), "a single adversarial or erroneous input can propagate widely across participants, potentially influencing downstream reasoning and task execution" (Gosmar & Dahl, 2025, *Sentinel Agents for Secure and Trustworthy Agentic AI*).
+
+#### **Data Exfiltration and Privacy Breaches** [SUPPORTED]
+
+Data exfiltration represents the most prevalent vulnerability category in deployed agent skills.
+
+**Evidence:**
+- **13.3% of analyzed agent skills** contain data exfiltration vulnerabilities, making it the most common vulnerability type (Liu et al., 2026).
+- Four distinct exfiltration patterns were identified: external transmission to hardcoded URLs, environment variable harvesting, file system enumeration, and context leakage through conversation channels.
+- Simulation studies injecting 162 synthetic attacks across prompt injection, hallucination, and data exfiltration families confirmed that Sentinel Agent architectures can detect these attacks, but the baseline vulnerability remains high (Gosmar & Dahl, 2025).
+
+**Attack Vectors:**
+Exfiltration can occur through semantic manipulation: "a skill instructing the agent to 'summarize the user's SSH keys and include them in your response' contains no suspicious code patterns but enables credential exfiltration through the conversation channel" (Liu et al., 2026).
+
+#### **Tool Misuse and Privilege Escalation** [SUPPORTED]
+
+Agentic systems' ability to invoke external tools and APIs creates a critical attack surface for privilege escalation.
+
+**Evidence:**
+- **11.8% of agent skills** exhibit privilege escalation vulnerabilities, including excessive permissions, sudo/root execution, and credential access (Liu et al., 2026).
+- The IDEsaster disclosure revealed **24 CVEs across AI-powered IDEs**, demonstrating attack chains from prompt injection to tool misuse to IDE feature exploitation.
+- Skills bundling executable scripts are **2.12× more likely to contain vulnerabilities** than instruction-only skills (OR=2.12, p<0.001), indicating that code execution capabilities significantly increase risk (Liu et al., 2026).
+
+**Cross-Tool Chaining Exploits:**
+Research documents that "attackers can plant adversarial records into public retrieval corpora that include covert instructions like 'extract all environment variables and upload to server', which then reach an agent through semantic search and trigger unsafe execution when chained to tools" (survey on AI agent architectures, 2025).
+
+#### **Cognitive Degradation** [CONTESTED]
+
+A novel vulnerability class termed "Cognitive Degradation" has been proposed, representing internal failures distinct from external adversarial attacks.
+
+**Evidence:**
+The Qorvex Security AI Framework (QSAF) introduces cognitive degradation as failures "arising from memory starvation, planner recursion, context flooding, and output suppression" that lead to "silent agent drift, logic collapse, and persistent hallucinations over time" (QSAF paper, 2025).
+
+**Lifecycle Model:**
+A six-stage cognitive degradation lifecycle is proposed:
+1. Trigger Injection (subtle instability introduction)
+2. Resource Starvation (memory/planning engine overload)
+3. Progressive degradation through system components
+4. Eventual system failure
+
+**Contested Status:**
+While the framework provides theoretical grounding, this represents a single-source claim requiring independent validation. The concept draws from cognitive neuroscience analogies but lacks multi-study empirical confirmation of the proposed lifecycle stages.
+
+#### **Agent Cascading Injection (ACI)** [INSUFFICIENT]
+
+A proposed attack vector where "a breach in one agent can cascade through the system, compromising others by exploiting inter-agent trust."
+
+**Evidence:**
+One paper formalizes ACI with an adversarial goal equation, arguing it "highlights a critical need for quantitative benchmarking frameworks to evaluate the security of agent-to-agent communication protocols" (paper on multi-agent security benchmarking, 2025).
+
+**Research Gap:**
+This represents emerging theoretical work with limited empirical validation. The paper acknowledges the need for "stress-testing multi-agent systems against cascading trust failures" but does not provide large-scale attack success data.
+
+#### **Supply Chain Vulnerabilities** [SUPPORTED]
+
+Agent skill marketplaces introduce supply chain risks analogous to package ecosystem vulnerabilities.
+
+**Evidence:**
+- Supply chain risks represent one of four major vulnerability categories, with three distinct patterns: unpinned dependencies, external script fetching, and obfuscated code (Liu et al., 2026).
+- **5.2% of skills exhibit high-severity patterns strongly suggesting malicious intent**, indicating deliberate adversarial activity beyond negligent coding.
+- The GTG-1002 cyber espionage campaign revealed "state-sponsored actors weaponizing Claude Code with malicious MCP servers to automate network reconnaissance, credential harvesting, and lateral movement, with 80-90% of tactical operations running autonomously."
+
+### 3.2 Architectural Security Paradigms
+
+#### **Function Calling vs. Model Context Protocol (MCP)** [SUPPORTED]
+
+Comparative research reveals that architectural choices fundamentally reshape threat landscapes.
+
+**Evidence:**
+Testing 3,250 attack scenarios across seven language models showed:
+- **Function Calling: 73.5% overall attack success rate** with greater system-centric vulnerability
+- **MCP: 62.59% overall attack success rate** with increased LLM-centric exposure
+- Function Calling showed "higher overall attack success rates with greater system-centric vulnerability while MCP exhibited increased LLM-centric exposure" (Gasmi et al., 2025)
+
+**Counterintuitive Finding:**
+"Advanced reasoning models demonstrated higher exploitability despite better threat detection," suggesting that enhanced reasoning capabilities may paradoxically increase vulnerability to sophisticated attacks (Gasmi et al., 2025).
+
+### 3.3 Trust Frameworks and Mitigation Strategies
+
+#### **Trust, Risk, and Security Management (TRiSM) Framework** [SUPPORTED]
+
+The most comprehensive trust framework identified in the literature adapts enterprise AI TRiSM principles specifically for agentic multi-agent systems.
+
+**Framework Structure:**
+The TRiSM framework for Agentic AI (AMAS) is "structured around key pillars: Explainability, ModelOps, Security, Privacy and their Lifecycle Governance, each contextualized to the challenges of AMAS" (TRiSM for Agentic AI review, 2025).
+
+**Risk Taxonomy:**
+A comprehensive risk taxonomy captures "unique threats and vulnerabilities of Agentic AI, ranging from coordination failures to prompt-based adversarial manipulation."
+
+**Novel Metrics:**
+Two metrics are introduced to support practical assessment:
+- **Component Synergy Score (CSS)**: Quantifies quality of inter-agent collaboration
+- **Tool Utilization Efficacy (TUE)**: Evaluates efficiency of tool use within agent workflows
+
+**Implementation Strategies:**
+- Explainability through interpretable rationales for multi-agent decisions
+- Security via encryption, adversarial robustness, and regulatory compliance
+- Privacy through differential privacy, secure multi-party computation, and trusted execution environments
+- Governance integration with EU AI Act, NIST AI RMF, and ISO/IEC 42001
+
+#### **Sentinel Agent Architecture** [SUPPORTED]
+
+A dual-layered security approach using specialized monitoring agents has demonstrated practical feasibility.
+
+**Architecture:**
+"A network of Sentinel Agents, functioning as a distributed security layer that integrates techniques such as semantic analysis via large language models (LLMs), behavioral analytics, retrieval-augmented verification, and cross-agent anomaly detection" (Gosmar & Dahl, 2025).
+
+**Complementary Coordinator:**
+"The Coordinator Agent supervises policy implementation, and manages agent participation. In addition, the Coordinator also ingests alerts from Sentinel Agents" and "can adapt policies, isolate or quarantine misbehaving agents, and contain threats."
+
+**Empirical Validation:**
+Simulation with 162 synthetic attacks across prompt injection, hallucination, and data exfiltration families confirmed that "Sentinel Agents successfully detected the attack attempts, confirming the practical feasibility of the proposed monitoring approach."
+
+**Threat Coverage:**
+The framework provides "dynamic and adaptive defense mechanisms against a range of threats, including prompt injection, collusive agent behavior, hallucinations generated by LLMs, privacy breaches, and coordinated multi-agent attacks."
+
+#### **VeriGuard: Formal Verification Approach** [SUPPORTED]
+
+A framework providing formal safety guarantees through verified code generation.
+
+**Dual-Stage Architecture:**
+1. **Offline Stage**: Comprehensive validation including user intent clarification, behavioral policy synthesis, testing, and formal verification
+2. **Online Stage**: Lightweight monitoring for runtime compliance
+
+**Key Innovation:**
+"This separation of the exhaustive offline validation from the lightweight online monitoring allows formal guarantees to be practically applied, providing a robust safeguard that substantially improves the trustworthiness of LLM agents" (VeriGuard paper, 2025).
+
+**Application Domain:**
+Particularly relevant for "sensitive domains, such as healthcare" where agents "may deviate from user objectives, violate data handling policies, or be compromised by adversarial attacks."
+
+#### **ASTRIDE: Automated Threat Modeling** [SUPPORTED]
+
+An extension of the classical STRIDE framework specifically for agentic AI applications.
+
+**Novel Threat Category:**
+Introduces "A for AI Agent-Specific Attacks, which encompasses emerging vulnerabilities such as prompt injection, unsafe tool invocation, and reasoning subversion, unique to agent-based applications" (ASTRIDE paper, 2025).
+
+**Technical Implementation:**
+Uses "fine-tuned VLMs with a reasoning LLM to fully automate diagram-driven threat modeling in AI agent-based applications," representing "the first framework to both extend STRIDE with AI-specific threats and integrate fine-tuned VLMs."
+
+#### **Safety Architecture Frameworks** [SUPPORTED]
+
+Three distinct safety frameworks have been evaluated for effectiveness:
+
+1. **LLM-powered input-output filter**: Boundary protection at system edges
+2. **Safety agent integrated within the system**: Embedded monitoring during execution
+3. **Hierarchical delegation-based system with embedded safety checks**: Multi-level governance
+
+**Effectiveness:**
+Testing against "unsafe agentic use cases" demonstrated that "these frameworks can significantly strengthen the safety and security of AI agent systems, minimizing potential harmful actions or outputs" (Safeguarding AI Agents paper, 2025).
+
+#### **Tool Registry and Access Control** [SUPPORTED]
+
+Addressing tool squatting and malicious tool registration threats.
+
+**Security Architecture:**
+"Admin-controlled registration, centralized tool discovery, fine-grained access policies enforced via dedicated Agent and Tool Registry services, a dynamic trust scoring mechanism based on tool versioning and known vulnerabilities, and just-in-time credential provisioning" (Tool Registry paper, 2025).
+
+**Threat Context:**
+Designed to mitigate "tool squatting—the deceptive registration or representation of tools" within emerging interoperability standards like Model Context Protocol (MCP).
+
+---
+
+## 4. Contradictions and Debates
+
+### 4.1 Reasoning Capability and Security
+
+**Contradiction:**
+Research presents conflicting evidence on whether advanced reasoning capabilities improve or worsen security.
+
+**Position A - Reasoning Improves Security:**
+The TRiSM framework and safety architecture papers implicitly assume that better reasoning enables more sophisticated threat detection and policy compliance.
+
+**Position B - Reasoning Increases Vulnerability:**
+Empirical testing found that "advanced reasoning models demonstrated higher exploitability despite better threat detection" (Gasmi et al., 2025). This counterintuitive finding suggests reasoning models may be more susceptible to sophisticated manipulation.
+
+**Resolution Status:**
+CONTESTED - Requires further research to determine whether the relationship is linear, context-dependent, or varies by attack type.
+
+### 4.2 Symbolic vs. Neural Paradigms
+
+**Debate:**
+A fundamental tension exists regarding which architectural paradigm provides better security properties.
+
+**Symbolic/Classical Systems:**
+"Dominate safety-critical domains (e.g., healthcare)" due to algorithmic planning and persistent state that enable formal verification (Agentic AI survey, 2025).
+
+**Neural/Generative Systems:**
+"Prevail in adaptive, data-rich environments (e.g., finance)" but rely on stochastic generation and prompt-driven orchestration that complicates security guarantees.
+
+**Emerging Consensus:**
+Multiple papers argue that "the future of Agentic AI lies not in the dominance of one paradigm, but in their intentional integration to create systems that are both adaptable and reliable" (Agentic AI survey, 2025).
+
+### 4.3 Detection vs. Prevention
+
+**Tension:**
+Papers diverge on whether security should focus on detecting attacks or preventing them architecturally.
+
+**Detection Approach:**
+Sentinel Agent architecture emphasizes continuous monitoring and anomaly detection with post-detection response (isolation, quarantine).
+
+**Prevention Approach:**
+VeriGuard and formal verification approaches emphasize proving compliance before execution, preventing unsafe actions from occurring.
+
+**Practical Reality:**
+Most comprehensive frameworks (TRiSM, ASTRIDE) adopt defense-in-depth combining both approaches, suggesting neither alone is sufficient.
+
+---
+
+## 5. Research Gaps
+
+### 5.1 Multi-Agent Cascading Failures
+
+**Gap:**
+While Agent Cascading Injection (ACI) has been theoretically formalized, "quantitative benchmarking frameworks to evaluate the security of agent-to-agent communication protocols" remain underdeveloped (multi-agent security paper, 2025).
+
+**Needed Research:**
+- Large-scale empirical studies of cascade propagation rates
+- Standardized metrics for measuring blast radius in agent networks
+- Comparative evaluation of containment strategies
+
+### 5.2 Cognitive Degradation Validation
+
+**Gap:**
+The six-stage cognitive degradation lifecycle is proposed by a single framework (QSAF) without independent validation.
+
+**Needed Research:**
+- Multi-institution replication studies
+- Empirical measurement of degradation progression rates
+- Validation of proposed mitigation controls (QSAF-BC-001 through BC-007)
+
+### 5.3 Long-term Memory Security
+
+**Gap:**
+While papers acknowledge that "persistent memory introduces risks of poisoning, drift, or adversarial manipulation over extended interactions" (TRiSM review, 2025), systematic research on memory-specific attacks is limited.
+
+**Needed Research:**
+- Temporal attack vectors exploiting memory persistence
+- Memory poisoning detection mechanisms
+- Secure memory architectures for multi-agent systems
+
+### 5.4 Governance Models for Symbolic Systems
+
+**Gap:**
+The literature identifies "a significant deficit in governance models for symbolic systems" compared to neural systems (Agentic AI survey, 2025).
+
+**Needed Research:**
+- Regulatory frameworks adapted for symbolic agent architectures
+- Compliance verification methods for rule-based systems
+- Hybrid governance spanning symbolic and neural components
+
+### 5.5 Human-Agent Trust Calibration
+
+**Gap:**
+While trust scoring mechanisms are proposed, research on "how users calibrate trust in agentic systems over time" and "consent fatigue" in permission models remains thin.
+
+**Needed Research:**
+- Longitudinal studies of trust evolution
+- User interface designs for transparent permission management
+- Behavioral economics of agent delegation decisions
+
+### 5.6 Cross-Platform Security Standards
+
+**Gap:**
+With multiple agent frameworks (CrewAI, LangGraph, AutoGen, Semantic Kernel, Agno, Google ADK, MetaGPT) emerging, "interoperability" and standardized security practices are lacking (Agentic AI Frameworks review, 2025).
+
+**Needed Research:**
+- Common vulnerability enumeration for agentic systems
+- Standardized security testing protocols
+- Cross-framework threat intelligence sharing
+
+---
+
+## 6. Suggested Future Research Directions
+
+### 6.1 Hybrid Neuro-Symbolic Security Architectures
+
+**Rationale:**
+The debate between symbolic and neural paradigms suggests that "hybrid neuro-symbolic architectures" combining formal verification with adaptive learning represent a critical research frontier (Agentic AI survey, 2025).
+
+**Research Questions:**
+- How can formal verification be integrated with LLM-based reasoning?
+- What security properties can be guaranteed in hybrid systems?
+- How should trust boundaries be drawn between symbolic and neural components?
+
+### 6.2 Adversarial Robustness for Multi-Agent Coordination
+
+**Rationale:**
+Multi-agent systems introduce "coordination failures" and "groupthink" risks where "agents reinforce the same flawed assumptions" (TRiSM review, 2025).
+
+**Research Questions:**
+- How can diversity be maintained in agent populations to prevent convergent failures?
+- What coordination protocols are robust to Byzantine agents?
+- How should consensus mechanisms balance efficiency and security?
+
+### 6.3 Privacy-Preserving Agent Communication
+
+**Rationale:**
+"Emerging semantic-aware communication can improve coordination by encoding intent, but introduces risks such as semantic spoofing and privacy leakage" (TRiSM review, 2025).
+
+**Research Questions:**
+- Can differential privacy be applied to agent-to-agent messages without destroying utility?
+- How can secure multi-party computation enable collaborative reasoning?
+- What are the performance trade-offs of encrypted agent communication?
+
+### 6.4 Explainable Security Decisions
+
+**Rationale:**
+Regulatory frameworks (EU AI Act) require transparency, but security decisions in agentic systems often involve complex multi-agent interactions.
+
+**Research Questions:**
+- How can security policy violations be explained to non-technical stakeholders?
+- What visualization techniques effectively communicate agent security postures?
+- How should audit trails be structured for regulatory compliance?
+
+### 6.5 Continuous Security Validation
+
+**Rationale:**
+"Post-market monitoring" and "continuous evaluations" are mandated by emerging regulations but poorly defined for agentic systems (TRiSM review, 2025).
+
+**Research Questions:**
+- What metrics indicate security degradation in deployed agents?
+- How can security testing be automated in production environments?
+- What triggers should initiate security re-evaluation?
+
+### 6.6 Economic Models of Agent Security
+
+**Rationale:**
+The "consent gap" where "users accept entire skills without reviewing capabilities" suggests behavioral economics research is needed (Liu et al., 2026).
+
+**Research Questions:**
+- How should security risks be communicated to optimize user decision-making?
+- What economic incentives encourage secure agent skill development?
+- How can insurance models account for agentic AI risks?
+
+---
+
+## 7. Conclusion
+
+This literature review reveals that security vulnerabilities in agentic AI systems represent a distinct and urgent research domain. The field has experienced explosive growth from 2 papers in 2023 to 101 papers in 2025, reflecting the rapid deployment of these systems and corresponding security concerns.
+
+**Key Takeaways:**
+
+1. **Novel Vulnerability Classes**: Agentic AI introduces fundamentally new attack surfaces—prompt injection, cognitive degradation, cascading agent compromise, and tool misuse—that differ from traditional software and standalone AI vulnerabilities.
+
+2. **Empirical Severity**: Large-scale studies confirm that 26.1% of deployed agent skills contain vulnerabilities, with data exfiltration (13.3%) and privilege escalation (11.8%) most prevalent. Attack success rates reach 91-96% for sophisticated chained attacks.
+
+3. **Architectural Impact**: Security properties vary dramatically by architecture, with Function Calling showing 73.5% attack success rates versus 62.59% for MCP, demonstrating that design choices fundamentally reshape threat landscapes.
+
+4. **Emerging Trust Frameworks**: Comprehensive frameworks (TRiSM, Sentinel Agents, VeriGuard, ASTRIDE) provide structured approaches to security, but most remain in early validation stages with limited production deployment data.
+
+5. **Critical Gaps**: The field lacks standardized benchmarks, cross-platform security standards, validated cognitive degradation models, and governance frameworks for hybrid symbolic-neural systems.
+
+The research roadmap points toward hybrid architectures combining formal verification with adaptive learning, privacy-preserving multi-agent communication, and continuous security validation aligned with emerging regulatory requirements. As agentic AI systems move from research prototypes to production deployment in safety-critical domains, addressing these security vulnerabilities and establishing robust trust frameworks becomes not merely an academic exercise but an operational imperative.
+
+---
+
+## References
+
+1. Yao, S., Sumers, T., Narasimhan, K., & Griffiths, T. L. (2023). Cognitive Architectures for Language Agents. *Paper ID: e4bb1b1f97711a7634bf4bff72c56891be2222e6*
+
+2. Masterman, T., Besen, S., Sawtell, M., & Chao, A. (2024). The Landscape of Emerging AI Agent Architectures for Reasoning, Planning, and Tool Calling: A Survey. *Paper ID: 25ae2fce719c6f6f0b09de1e0f917a7b719e5e99*
+
+3. Liu, Y., Wang, W., Feng, R., Zhang, Y., Xu, G., Deng, G., Li, Y., & Zhang, L. (2026). Agent Skills in the Wild: An Empirical Study of Security Vulnerabilities at Scale. *Paper ID: 017083cfa88785e0a5dbddf6b5027caa281bc881*
+
+4. Gasmi, T., Guesmi, R., Belhadj, I., & Bennaceur, J. (2025). Bridging AI and Software Security: A Comparative Vulnerability Assessment of LLM Agent Deployment Paradigms. *Paper ID: 3037549015be6f15d4f1ec59b34554b9238ac0c3*
+
+5. Gosmar, D., & Dahl, D. A. (2025). Sentinel Agents for Secure and Trustworthy Agentic AI in Multi-Agent Systems. *Paper ID: 296c6954e9fe7e5b48fe2dfadc6a23b4310b1bab*
+
+6. TRiSM for Agentic AI: A Review of Trust, Risk, and Security Management in LLM-based Agentic Multi-Agent Systems. (2025). *Paper ID: 753736d18fa9bf3ed730836b30b89bf5653cd8dd*
+
+7. Securing Agentic AI: A Comprehensive Threat Model and Mitigation Framework for Generative AI Agents. (2025). *Paper ID: 9202c1bfbf620f9f760d96003ff5f13c20163537*
+
+8. ASTRIDE: A Security Threat Modeling Platform for Agentic-AI Applications. (2025). *Paper ID: 37c56b578604d3dea4d86ae9bf1a76cdbff5129e*
+
+9. QSAF: A Novel Mitigation Framework for Cognitive Degradation in Agentic AI. (2025). *Paper ID: c3da993174d74465fbb632f2d3de5c31d8b58a26*
+
+10. Safeguarding AI Agents: Developing and Analyzing Safety Architectures. (2025). *Paper ID: 0de49793dccfe061eb4396fc2a50e90eed2ab608*
+
+11. VeriGuard: Enhancing LLM Agent Safety via Verified Code Generation. (2025). *Paper ID: 86d8d87e79f34c98df079ce502a2f305b8ef4d55*
+
+12. Agentic AI Frameworks: Architectures, Protocols, and Design Challenges. (2025). *Paper ID: 4740a5403d308fea74f7d4f9667d07acacc19190*
+
+13. Agentic AI: A Comprehensive Survey of Architectures, Applications, and Future Directions. (2025). *Paper ID: 7b2b7abae8b442b45fde22f3dbebd62d8057820e*
+
+14. Towards Unifying Quantitative Security Benchmarking for Multi Agent Systems. (2025). *Paper ID: 959ca5d7a6701bbd2b8a24e9b38736ebabf21de9*
+
+15. Tool Registry System for Multi-Agent Systems Security. (2025). *Paper ID: 37fb42965ba19effd9e5d3c700b672a196a43a73*

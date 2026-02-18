@@ -1,0 +1,241 @@
+# =============================================================================
+# Workflow: Research Review Loop
+# Category: ai-agents
+#
+# Orchestrates a multi-agent literature review cycle. The Researcher Agent
+# produces a draft, the Peer Review Agent evaluates it, and if issues are
+# found, feedback is sent back for revision. Repeats up to 3 iterations
+# or until the review passes.
+#
+# Agents:
+#   - research_literature_review_agent (Researcher)
+#   - peer_review_agent (Peer Reviewer)
+#
+# Setup:
+#   1. Import into Kibana: Management > Workflows > Create workflow > paste YAML
+#   2. Run manually and provide a research topic as input.
+# =============================================================================
+version: "1"
+name: Research Review Loop
+description: >
+  Automates the research-review-revise cycle between the Researcher Agent
+  and Peer Review Agent. Sends a topic to the Researcher, passes the draft
+  to the Reviewer, and loops through revisions until PASS or 3 iterations.
+enabled: true
+tags: ["ai-agents", "research", "peer-review", "multi-agent"]
+
+# ---------------------------------------------------------------------------
+# INPUTS
+# ---------------------------------------------------------------------------
+inputs:
+  - name: topic
+    type: string
+    description: The research topic or question to investigate
+    required: true
+
+# ---------------------------------------------------------------------------
+# TRIGGERS
+# ---------------------------------------------------------------------------
+triggers:
+  - type: manual
+
+# ---------------------------------------------------------------------------
+# STEPS
+# ---------------------------------------------------------------------------
+steps:
+
+  # =========================================================================
+  # ITERATION 1 — Initial draft and review
+  # =========================================================================
+
+  # Step 1: Researcher Agent produces the initial literature review draft
+  - name: researcher_draft_v1
+    type: ai.agent
+    with:
+      agent-id: research_literature_review_agent
+      message: >
+        Conduct a comprehensive literature review on the following topic.
+        Use all available search tools to find relevant papers in the corpus.
+        Follow your complete 6-step pipeline (Plan, Scope, Identify, Retrieve,
+        Verify, Synthesize). Your report must cite specific papers from the
+        corpus with titles, authors, and years.
+
+        Topic: {{ inputs.topic }}
+    timeout: 600s
+
+  # Step 2: Peer Review Agent evaluates the draft
+  - name: review_v1
+    type: ai.agent
+    with:
+      agent-id: peer_review_agent
+      message: >
+        Review the following literature review report:
+
+        {{ steps.researcher_draft_v1.output.message }}
+    timeout: 600s
+
+  # Step 3: Extract verdict from review text
+  - name: parse_verdict_v1
+    type: ai.prompt
+    with:
+      prompt: >
+        Read the following peer review output. Extract only the verdict.
+        Reply with exactly one word: PASS or REVISION_NEEDED.
+        Do not include any other text, punctuation, or explanation.
+
+        {{ steps.review_v1.output.message }}
+
+  # Step 4: Log iteration 1 result
+  - name: log_iteration_1
+    type: console
+    with:
+      message: "Iteration 1 verdict: {{ steps.parse_verdict_v1.output.content }}"
+
+  # Step 5: Return report if iteration 1 passed
+  - name: final_report_v1
+    type: if
+    condition: "steps.parse_verdict_v1.output.content : PASS"
+    steps:
+      - name: output_v1
+        type: console
+        with:
+          message: >
+            LITERATURE REVIEW REPORT:
+
+            {{ steps.researcher_draft_v1.output.message }}
+
+            ---
+
+            PEER REVIEW:
+
+            {{ steps.review_v1.output.message }}
+
+  # =========================================================================
+  # ITERATION 2 — First revision (only if iteration 1 failed)
+  # =========================================================================
+
+  - name: check_revision_needed_v1
+    type: if
+    condition: "steps.parse_verdict_v1.output.content : REVISION_NEEDED"
+    steps:
+
+      # Step 6: Researcher Agent revises based on review feedback
+      - name: researcher_draft_v2
+        type: ai.agent
+        with:
+          agent-id: research_literature_review_agent
+          message: >
+            You previously produced the following literature review:
+
+            {{ steps.researcher_draft_v1.output.message }}
+
+            A peer reviewer evaluated this report and identified the following issues:
+
+            {{ steps.review_v1.output.message }}
+
+            Please revise the report to address all CRITICAL and MAJOR issues identified
+            in the review. Produce a complete revised report in the same 6-section format.
+            Use your search tools to find correct evidence for any citation issues.
+        timeout: 600s
+
+      # Step 7: Peer Review Agent evaluates the revised draft
+      - name: review_v2
+        type: ai.agent
+        with:
+          agent-id: peer_review_agent
+          message: >
+            Review the following revised literature review report:
+
+            {{ steps.researcher_draft_v2.output.message }}
+        timeout: 600s
+
+      # Step 8: Extract verdict from review v2
+      - name: parse_verdict_v2
+        type: ai.prompt
+        with:
+          prompt: >
+            Read the following peer review output. Extract only the verdict.
+            Reply with exactly one word: PASS or REVISION_NEEDED.
+            Do not include any other text, punctuation, or explanation.
+
+            {{ steps.review_v2.output.message }}
+
+      # Step 9: Log iteration 2 result
+      - name: log_iteration_2
+        type: console
+        with:
+          message: "Iteration 2 verdict: {{ steps.parse_verdict_v2.output.content }}"
+
+      # Step 10: Return report if iteration 2 passed
+      - name: final_report_v2
+        type: if
+        condition: "steps.parse_verdict_v2.output.content : PASS"
+        steps:
+          - name: output_v2
+            type: console
+            with:
+              message: >
+                LITERATURE REVIEW REPORT:
+
+                {{ steps.researcher_draft_v2.output.message }}
+
+                ---
+
+                PEER REVIEW:
+
+                {{ steps.review_v2.output.message }}
+
+      # =====================================================================
+      # ITERATION 3 — Final revision (only if iteration 2 also failed)
+      # =====================================================================
+
+      - name: check_revision_needed_v2
+        type: if
+        condition: "steps.parse_verdict_v2.output.content : REVISION_NEEDED"
+        steps:
+
+          # Step 11: Researcher Agent final revision
+          - name: researcher_draft_v3
+            type: ai.agent
+            with:
+              agent-id: research_literature_review_agent
+              message: >
+                You previously produced the following literature review:
+
+                {{ steps.researcher_draft_v2.output.message }}
+
+                A peer reviewer evaluated this revised report and still identified issues:
+
+                {{ steps.review_v2.output.message }}
+
+                This is the final revision opportunity. Please carefully address all
+                remaining CRITICAL and MAJOR issues. Produce a complete revised report
+                in the same 6-section format. Use your search tools to find correct
+                evidence for any citation issues.
+            timeout: 600s
+
+          # Step 12: Peer Review Agent final evaluation
+          - name: review_v3
+            type: ai.agent
+            with:
+              agent-id: peer_review_agent
+              message: >
+                Review the following final revised literature review report:
+
+                {{ steps.researcher_draft_v3.output.message }}
+            timeout: 600s
+
+          # Step 13: Return final report (iteration 3)
+          - name: output_v3
+            type: console
+            with:
+              message: >
+                LITERATURE REVIEW REPORT (FINAL — iteration 3):
+
+                {{ steps.researcher_draft_v3.output.message }}
+
+                ---
+
+                PEER REVIEW:
+
+                {{ steps.review_v3.output.message }}

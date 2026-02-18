@@ -1,0 +1,58 @@
+# =============================================================================
+# Workflow: Peer Review
+# Category: ai-agents
+#
+# Simple workflow that sends a literature review draft to the Peer Review
+# Agent and returns the structured review. Designed to be exposed as a tool
+# to the Researcher Agent for agent-to-agent communication.
+#
+# Setup:
+#   1. Import into Kibana: Management > Workflows > Create workflow > paste YAML
+#   2. Create a Workflow tool in Agent Builder pointing to this workflow
+#   3. Assign the tool to the Researcher Agent
+# =============================================================================
+version: "1"
+name: Peer Review
+description: >
+  Sends a literature review draft to the Peer Review Agent for independent
+  evaluation. Returns a structured review with VERDICT, ISSUES, MISSED_PAPERS,
+  and SUMMARY.
+enabled: true
+tags: ["ai-agents", "peer-review", "multi-agent"]
+
+# ---------------------------------------------------------------------------
+# INPUTS
+# ---------------------------------------------------------------------------
+inputs:
+  - name: draft
+    type: string
+    description: The complete literature review report to be reviewed
+    required: true
+
+# ---------------------------------------------------------------------------
+# TRIGGERS
+# ---------------------------------------------------------------------------
+triggers:
+  - type: manual
+
+# ---------------------------------------------------------------------------
+# STEPS
+# ---------------------------------------------------------------------------
+steps:
+
+  # Step 1: Send the draft to the Peer Review Agent
+  - name: peer_review
+    type: ai.agent
+    with:
+      agent-id: peer_review_agent
+      message: >
+        Review the following literature review report:
+
+        {{ inputs.draft }}
+    timeout: 600s
+
+  # Step 2: Log the review result
+  - name: log_review
+    type: console
+    with:
+      message: "Peer review complete: {{ steps.peer_review.output.message }}"

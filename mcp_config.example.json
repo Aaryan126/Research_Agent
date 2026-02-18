@@ -1,0 +1,65 @@
+{
+  "_comment": "Example MCP client configurations for the Research Literature Review Agent. Copy the relevant section into your MCP client settings.",
+
+  "claude_desktop": {
+    "_location": "Windows: %APPDATA%\\Claude\\claude_desktop_config.json | macOS: ~/Library/Application Support/Claude/claude_desktop_config.json",
+    "mcpServers": {
+      "elastic-research-tools": {
+        "_description": "Elastic Agent Builder built-in MCP — exposes individual search tools (search_papers, search_metadata, publication_trends, etc.)",
+        "command": "npx",
+        "args": [
+          "mcp-remote",
+          "https://<KIBANA_URL>/api/agent_builder/mcp",
+          "--header",
+          "Authorization:ApiKey <ELASTIC_API_KEY>"
+        ]
+      },
+      "research-agent": {
+        "_description": "Custom MCP server — exposes the full multi-agent literature review pipeline (research_literature_review tool)",
+        "command": "python",
+        "args": ["server/mcp_server.py"],
+        "cwd": "C:\\path\\to\\Research_Agent"
+      }
+    }
+  },
+
+  "claude_code": {
+    "_location": "Project .claude/settings.json or global ~/.claude/settings.json",
+    "mcpServers": {
+      "elastic-research-tools": {
+        "command": "npx",
+        "args": [
+          "mcp-remote",
+          "https://<KIBANA_URL>/api/agent_builder/mcp",
+          "--header",
+          "Authorization:ApiKey <ELASTIC_API_KEY>"
+        ]
+      },
+      "research-agent": {
+        "command": "python",
+        "args": ["server/mcp_server.py"],
+        "cwd": "C:\\path\\to\\Research_Agent"
+      }
+    }
+  },
+
+  "cursor_vscode": {
+    "_location": ".cursor/mcp.json or .vscode/mcp.json in project root",
+    "mcpServers": {
+      "elastic-research-tools": {
+        "command": "npx",
+        "args": [
+          "mcp-remote",
+          "https://<KIBANA_URL>/api/agent_builder/mcp",
+          "--header",
+          "Authorization:ApiKey <ELASTIC_API_KEY>"
+        ]
+      },
+      "research-agent": {
+        "command": "python",
+        "args": ["server/mcp_server.py"],
+        "cwd": "C:\\path\\to\\Research_Agent"
+      }
+    }
+  }
+}
