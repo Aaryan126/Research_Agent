@@ -1,6 +1,6 @@
 # Research Orchestration System
 
-Synthesizing findings across dozens of papers into a literature review takes researchers weeks. Cross-checking whether a specific claim holds up across the broader literature is equally time-consuming. The Research Orchestration System automates both tasks using three multi-step agents built using Elastic Agent Builder. These are specialized agents that search, synthesise, review, and verify each other's work. Currently running on ~200 Agentic AI papers (~5,000 full-text chunks) indexed in Elasticsearch, the system is corpus-agnostic. The included indexing pipeline converts any collection of PDFs into searchable, embedded chunks.
+Synthesizing findings across dozens of papers into a literature review takes researchers weeks. The Research Orchestration System runs three Google ADK agents with Gemini on Vertex AI: a researcher, peer reviewer, and claim verifier. They use ADK function tools to query the existing Elasticsearch paper corpus. The indexing pipeline converts PDFs into searchable chunks, so another corpus can be used after indexing it.
 
 ## Architecture
 
@@ -16,10 +16,13 @@ Synthesizing findings across dozens of papers into a literature review takes res
        |--- /slack/*        (Slack bot — OAuth / slash commands)
        |
        v
-[Elastic Cloud]  ── Agent Builder
+[Google ADK + Gemini on Vertex AI]
        |--- Research Agent              (searches corpus, writes reviews)
-       |--- Peer Review Agent           (evaluates drafts, issues verdicts)
+       |--- Peer Review Agent           (checks evidence, issues verdicts)
        |--- Claim Verification Agent    (verifies claims against corpus)
+       |            |
+       |            v
+[Elastic Cloud / Elasticsearch]  ── ADK function tools
        |--- papers_metadata index       (~200 papers — titles, abstracts, embeddings)
        |--- papers_chunks index         (~5000 chunks — full-text passages + embeddings)
 ```
@@ -40,9 +43,9 @@ Synthesizing findings across dozens of papers into a literature review takes res
 Runs a six-step pipeline:
 
 - Plans sub-questions from user's query
-- Scopes the corpus using ES|QL analytics
+- Scopes the corpus using Elasticsearch aggregations
 - Identifies key papers by citation count
-- Retrieves evidence using hybrid keyword + semantic search across full-text chunks
+- Retrieves evidence using full-text search across paper chunks
 - Cross-checks findings for contradictions by running targeted searches for opposing evidence
 - Synthesizes everything into a structured literature review with inline citations and confidence tags ([SUPPORTED], [CONTESTED], [INSUFFICIENT])
 
@@ -51,7 +54,7 @@ Runs a six-step pipeline:
 Evaluates research draft through seven verification steps:
 
 - Checks structural completeness
-- Batch-verifies all references exist via ES|QL
+- Batch-verifies all referenced paper IDs against paper metadata
 - Audits confidence tags by verifying each claim
 - Spot-checks quantitative claims against source text
 - Identifies missing high-impact papers by comparing cited references against the most cited papers for the topic
@@ -70,7 +73,9 @@ Evaluates a specific claim against the corpus through a five-step pipeline:
 - Assesses nuances by searching for methodological differences and scope limitations
 - Produces structured verdict with confidence level
 
-Each agent uses 5 custom tools (2 index searches, 3 ES|QL tools) plus default platform tools. A FastAPI backend orchestrates the agent loop, streaming real-time reasoning traces via SSE.
+Each ADK agent receives six Elasticsearch function tools for paper search, metadata
+verification, citation ranking, corpus statistics, and publication trends. FastAPI
+orchestrates the loop and streams tool activity and final responses via SSE.
 
 ## Project Structure
 
@@ -82,7 +87,8 @@ Each agent uses 5 custom tools (2 index searches, 3 ES|QL tools) plus default pl
 │   ├── routers/
 │   │   └── research.py        # POST /api/research + /api/verify — SSE streaming endpoints
 │   └── services/
-│       ├── agent.py           # Elastic Agent Builder streaming client
+│       ├── agent.py           # Google ADK agents and SSE adapter
+│       ├── corpus_tools.py    # Elasticsearch tools for ADK
 │       ├── orchestrator.py    # Research-review loop + claim verification orchestrator
 │       └── workflow.py        # Elastic Workflows API client (legacy)
 │
@@ -118,7 +124,7 @@ Each agent uses 5 custom tools (2 index searches, 3 ES|QL tools) plus default pl
 │
 ├── DEPLOYMENT.md              # Full deployment guide (GCP, Caddy, Netlify, DNS)
 ├── SLACK.md                   # Slack bot setup and troubleshooting
-├── TOOLS.md                   # Custom Elastic Agent Builder tools documentation
+├── TOOLS.md                   # Historical Elastic Agent Builder tool documentation
 ├── EVALUATION.md              # Evaluation metrics and interpretation guide
 └── PROGRESS.md                # Development progress tracker
 ```
@@ -152,14 +158,29 @@ See [EVALUATION.md](EVALUATION.md) for detailed metrics explanation and interpre
 
 - Python 3.10+
 - Node.js 18+ (for frontend)
-- Elasticsearch credentials in `.env`
+- A Google Cloud project with Vertex AI API enabled, model access, and Application Default Credentials
+- Elasticsearch credentials and indexed `papers_metadata` and `papers_chunks` in `.env`
 
 ### Backend
 
 ```bash
+cp .env.example .env
+# Edit .env with your project ID, location and Elasticsearch credentials.
+gcloud auth application-default login
 pip install -r requirements.txt
 uvicorn server.main:app --host 0.0.0.0 --port 8000
 ```
+
+The backend uses `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, `GOOGLE_CLOUD_PROJECT`,
+`GOOGLE_CLOUD_LOCATION`, and `GEMINI_MODEL` from `.env`. ADC supplies Google
+credentials; no Google API key is needed. On a Google Cloud VM, attach a service
+account with Vertex AI permissions. Test with `POST /api/research` using
+`{"topic":"AI agent reliability","mode":"research"}` or `mode:"verify"`.
+The SSE stream reports agent starts, corpus tool calls/results, final text and verdicts.
+It does not expose Gemini's private reasoning.
+
+`app.py` and `server/services/workflow.py` are legacy Elastic workflow interfaces;
+the FastAPI, MCP and Slack paths use the ADK backend in `server/services/agent.py`.
 
 ### Frontend
 
@@ -185,7 +206,7 @@ The pipeline handles PDF parsing, text chunking (~385 words), embedding generati
 
 ## Deployment
 
-The system runs on a GCP e2-micro VM (Always Free tier) with Caddy for HTTPS, DuckDNS for DNS, and Netlify for the frontend. Total cost is ~$0-4/month (mostly GCP external IP). See [DEPLOYMENT.md](DEPLOYMENT.md) for full details.
+The previous deployment used a GCP VM, Caddy, DuckDNS and Netlify. Set the Vertex AI environment variables and attach an authorized service account before deploying this version. Vertex AI model calls and Elasticsearch have separate usage charges. See [DEPLOYMENT.md](DEPLOYMENT.md) for the earlier infrastructure setup; its Elastic Agent Builder steps are historical.
 
 ## Documentation
 
@@ -193,6 +214,6 @@ The system runs on a GCP e2-micro VM (Always Free tier) with Caddy for HTTPS, Du
 |---|---|
 | [DEPLOYMENT.md](DEPLOYMENT.md) | GCP VM, Caddy, DuckDNS, Netlify, server management |
 | [SLACK.md](SLACK.md) | Slack bot OAuth setup, slash command configuration |
-| [TOOLS.md](TOOLS.md) | Custom Elastic Agent Builder tools and search strategy |
+| [TOOLS.md](TOOLS.md) | Historical Elastic Agent Builder tools and search strategy |
 | [EVALUATION.md](EVALUATION.md) | Report quality metrics, benchmarks, interpretation |
 | [PROGRESS.md](PROGRESS.md) | Development history and phase-by-phase progress |

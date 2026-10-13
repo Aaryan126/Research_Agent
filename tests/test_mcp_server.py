@@ -49,7 +49,7 @@ class TestToolRegistration:
 
     def test_server_has_instructions(self):
         assert mcp.instructions is not None
-        assert "Elastic Agent Builder" in mcp.instructions
+        assert "Google ADK" in mcp.instructions
 
 
 # ---------------------------------------------------------------------------
@@ -278,13 +278,26 @@ class TestSSEParsing:
 class TestFastAPIMount:
     """Verify the MCP endpoint is mounted on the FastAPI app."""
 
+    @staticmethod
+    def _route_paths(app):
+        paths = []
+        for route in app.routes:
+            if hasattr(route, "path"):
+                paths.append(route.path)
+                paths.extend(route.path + child.path for child in getattr(route, "routes", [])
+                             if hasattr(child, "path"))
+            elif hasattr(route, "original_router"):
+                paths.extend(child.path for child in route.original_router.routes
+                             if hasattr(child, "path"))
+        return paths
+
     def test_mcp_route_exists(self):
         from server.main import app
-        route_paths = [r.path for r in app.routes]
+        route_paths = self._route_paths(app)
         assert "/mcp" in route_paths, f"'/mcp' not in routes: {route_paths}"
 
     def test_existing_routes_preserved(self):
         from server.main import app
-        route_paths = [r.path for r in app.routes]
+        route_paths = self._route_paths(app)
         assert "/api/health" in route_paths
         assert "/api/research" in route_paths

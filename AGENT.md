@@ -1,5 +1,9 @@
 # Research Agent — Agent Configuration Documentation
 
+> Historical documentation for the original Elastic Agent Builder implementation.
+> The active FastAPI agent runtime now uses Google ADK and Gemini on Vertex AI.
+> See [README.md](README.md) and [server/services/agent.py](server/services/agent.py).
+
 ## Overview
 
 The Academic Research Agent is a multi-agent system built with Elastic Agent Builder that automates systematic literature reviews and claim verification over a corpus of ~200 academic papers on Agentic AI. It combines LLM reasoning with Elasticsearch-powered search, analytics, and verification to produce structured, cited reports.

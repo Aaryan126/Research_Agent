@@ -1,5 +1,8 @@
 # Research Agent — Custom Tools Documentation
 
+> Historical Elastic Agent Builder tool configuration. The active Google ADK
+> functions are defined in [server/services/corpus_tools.py](server/services/corpus_tools.py).
+
 ## Overview
 
 This document describes all custom tools created in Elastic Agent Builder for the Academic Research Literature Review Agent. The agent uses these tools to search, analyze, and synthesize research papers about Agentic AI indexed in Elasticsearch.

@@ -14,6 +14,7 @@ ELASTIC_API_KEY = os.getenv("ELASTIC_API_KEY")
 RESEARCHER_AGENT_ID = "research_literature_review_agent"
 REVIEWER_AGENT_ID = "peer_review_agent"
 CLAIM_VERIFICATION_AGENT_ID = "claim_verification_agent"
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 MAX_ITERATIONS = 2
 AGENT_TIMEOUT = 600
 

@@ -1,4 +1,4 @@
-"""Research-review loop orchestrator using Elastic Converse streaming."""
+"""Research-review loop orchestrator using Google ADK agent events."""
 
 import json
 import logging
@@ -126,6 +126,7 @@ async def _stream_agent(
                     "agent": agent_label,
                     "iteration": iteration,
                 }), None
+                return
 
             elif etype == "reasoning":
                 payload = {
@@ -218,6 +219,9 @@ async def run_research_loop(topic: str, skip_review: bool = False) -> AsyncGener
                 RESEARCHER_AGENT_ID, "Research Agent", researcher_prompt, iteration,
             ):
                 yield sse_str
+                if sse_str.startswith("event: error\n"):
+                    yield _sse("done", {})
+                    return
                 if final_msg is not None:
                     researcher_output = final_msg
 
@@ -244,6 +248,9 @@ async def run_research_loop(topic: str, skip_review: bool = False) -> AsyncGener
                 REVIEWER_AGENT_ID, "Peer Review Agent", reviewer_prompt, iteration,
             ):
                 yield sse_str
+                if sse_str.startswith("event: error\n"):
+                    yield _sse("done", {})
+                    return
                 if final_msg is not None:
                     reviewer_output = final_msg
 
@@ -307,6 +314,9 @@ async def run_claim_verification(claim: str) -> AsyncGenerator[str, None]:
             iteration=1,
         ):
             yield sse_str
+            if sse_str.startswith("event: error\n"):
+                yield _sse("done", {})
+                return
             if final_msg is not None:
                 agent_output = final_msg
 

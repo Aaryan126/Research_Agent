@@ -1,5 +1,10 @@
 # Deployment Guide — Research Literature Review Agent
 
+> Historical deployment guide for the Elastic Agent Builder version. The current
+> FastAPI backend uses Google ADK with Gemini on Vertex AI. Configure the variables
+> in [.env.example](.env.example) and attach a service account with Vertex AI access
+> before using these infrastructure steps.
+
 ## Architecture
 
 ```

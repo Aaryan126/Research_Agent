@@ -128,7 +128,7 @@ export function CombinedReasoningTrace({ traces, verdicts, iterationInfo, isActi
 
   const label = isActive
     ? latestSnippet || (activeAgent ? `${activeAgent} working...` : 'Working...')
-    : 'Reasoning Trace';
+    : 'Agent Activity';
 
   return (
     <div className="mt-2">

@@ -24,7 +24,7 @@ mcp = FastMCP(
     "Research Literature Review Agent",
     instructions=(
         "Provides academic literature review and claim verification tools powered by "
-        "Elastic Agent Builder. Three tools are available:\n"
+        "Google ADK and Gemini on Vertex AI. Three tools are available:\n"
         "- research_literature_review: Full multi-agent pipeline with peer review (5-8 min)\n"
         "- research_draft: Research agent only, no peer review (2-3 min, faster)\n"
         "- verify_claim: Verify a claim against scientific literature (2-3 min)\n\n"
